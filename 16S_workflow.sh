@@ -1,13 +1,13 @@
 #!/bin/bash
-
-echo"#Création des dossiers pour les résutlats.
+echo"
+#Création des dossiers pour les résutlats.
 mkdir $2/fastqc_output
 mkdir $2/AlienTrimmer_output
 mkdir $2/vsearch_output
 mkdir $2/prep_OTU
 
 #On décompresse les zip pour la suite
-#gunzip $1/*.gz
+gunzip $1/*.gz
 
 fastqc $1/*.fastq -o $2/fastqc_output/
 
@@ -43,10 +43,18 @@ vsearch --derep_fulllength $2/amplicon.fasta --output $2/prep_OTU/Dedup.fasta --
 vsearch --fastx_filter $2/prep_OTU/Dedup.fasta --minsize 10 --fastaout $2/prep_OTU/filtre1.fasta
 
 #Suppression des chimères
-vsearch --uchime_denovo $2/prep_OTU/filtre1.fasta --nonchimeras $2/prep_OTU/filtre2_chimera.fasta"
+vsearch --uchime_denovo $2/prep_OTU/filtre1.fasta --nonchimeras $2/prep_OTU/filtre2_chimera.fasta
 
 #Clustering
 vsearch --cluster_size $2/prep_OTU/filtre2_chimera.fasta --id 0.97 --centroids $2/OTU.fasta --relabel OTU_
 
+#étude OTU
+vsearch --usearch_global $2/amplicon.fasta --db $2/OTU.fasta --id 0.97 --sizeout --otutabout $2/table_abondance.txt
 
+#étude OTU 16S
+vsearch --usearch_global $2/amplicon.fasta --db $2/../databases/mock_16S_18S.fasta --id 0.9 --top_hits_only\
+ --userfields query+target --userout $2/versus_16s.txt"
+
+#Ajout de noms de colonnes.
+sed -i '1iOTU\tAnnotation' $2/versus_16s.txt
 
